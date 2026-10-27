@@ -14,13 +14,13 @@ Without a key, every route serves a sample edition, so the UI can be built offli
 
 ## Data layer
 
-Types live in `src/lib/types.ts`. `stories[0]` of an `Edition` is the lead story.
+Types live in `src/lib/types.ts`. `stories[0]` of an `Edition` is the lead story. All calls go through Perplexity's Agent API (`/v1/agent`) with its `web_search` tool; `src/lib/perplexity.ts` wraps it.
 
 | Route | Call | Returns |
 | --- | --- | --- |
-| `GET /api/front-page?town=Asheville, NC&date=YYYY-MM-DD` | `sonar-pro`, JSON schema, last-week recency | `Edition`. Cached per town per day; add `&fresh=1` to reprint. |
-| `POST /api/article` `{ town, story }` | `sonar` | `Article`: plain-text `body` with `[n]` markers that index into `sources` |
-| `POST /api/ask` `{ town, story, article, messages }` | `sonar`, streamed | Answer text, then `\u001e` and a JSON array of sources |
+| `GET /api/front-page?town=Asheville, NC&date=YYYY-MM-DD` | effort `low`, JSON schema, last-week recency (~20s) | `Edition`. Cached per town per day; add `&fresh=1` to reprint. |
+| `POST /api/article` `{ town, story }` | effort `fast` (~6s) | `Article`: plain-text `body` with `[n]` markers matching `source.id` |
+| `POST /api/ask` `{ town, story, article, messages }` | effort `fast`, streamed (~4s) | Answer text with `[n]` markers, then `\u001e` and a JSON array of sources |
 
 Client hooks for components:
 

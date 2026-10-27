@@ -1,4 +1,5 @@
-export type Source = { url: string; title?: string };
+// `id` matches the [n] citation markers in article and answer text.
+export type Source = { id?: number; url: string; title?: string };
 
 export type Story = {
   id: string;

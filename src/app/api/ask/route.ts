@@ -1,6 +1,6 @@
-import { callPerplexity, hasPerplexityKey, sourcesFrom, type PerplexityChunk } from "@/lib/perplexity";
+import { callAgent, hasPerplexityKey, toSources, type AgentEvent, type SearchResult } from "@/lib/perplexity";
 import { SAMPLE_ANSWER } from "@/lib/sample";
-import { SOURCES_MARKER, type ChatMessage, type Source, type Story } from "@/lib/types";
+import { SOURCES_MARKER, type ChatMessage, type Story } from "@/lib/types";
 
 type AskRequest = {
   town: string;
@@ -17,22 +17,17 @@ export async function POST(req: Request) {
 
   let upstream: Response;
   try {
-    upstream = await callPerplexity({
-      model: "sonar",
+    upstream = await callAgent({
+      effort: "fast",
       stream: true,
-      messages: [
-        {
-          role: "system",
-          content: `You are the Porch Press newsroom answering readers in ${town}. Answer follow-up questions about local news in 2 to 4 short paragraphs of plain text, no markdown. Be specific and practical: dates, places, and how residents can take part. Cite sources with bracketed numbers like [1]. If you don't know, say so.
+      instructions: `You are the Porch Press newsroom answering readers in ${town}. Answer follow-up questions about local news in 2 to 4 short paragraphs of plain text, no markdown. Be specific and practical: dates, places, and how residents can take part. Cite sources with bracketed numbers like [1] that refer to your search results, never markdown links. If you don't know, say so.
 
 The reader is looking at this story:
 Headline: ${story.headline}
 Summary: ${story.summary}
 
 ${article.slice(0, 6000)}`,
-        },
-        ...messages,
-      ],
+      input: withLocalContext(messages, town, story.headline),
     });
   } catch (err) {
     console.error(err);
@@ -44,9 +39,9 @@ ${article.slice(0, 6000)}`,
       const reader = upstream.body!.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let sources: Source[] = [];
+      const results: SearchResult[] = [];
 
-      // Perplexity streams OpenAI-style SSE: "data: {json}" lines ending with "data: [DONE]".
+      // Server-sent events: "event: <type>" / "data: {json}" pairs; only the data lines matter.
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -58,21 +53,30 @@ ${article.slice(0, 6000)}`,
           const payload = line.slice(5).trim();
           if (!payload || payload === "[DONE]") continue;
           try {
-            const chunk = JSON.parse(payload) as PerplexityChunk;
-            const text = chunk.choices?.[0]?.delta?.content;
-            if (text) controller.enqueue(encoder.encode(text));
-            if (chunk.search_results?.length || chunk.citations?.length) sources = sourcesFrom(chunk);
+            const event = JSON.parse(payload) as AgentEvent;
+            if (event.type === "response.output_text.delta" && event.delta) {
+              controller.enqueue(encoder.encode(event.delta));
+            } else if (event.type === "response.reasoning.search_results") {
+              results.push(...(event.results ?? []));
+            }
           } catch {
             // ignore keep-alives and partial frames
           }
         }
       }
-      controller.enqueue(encoder.encode(SOURCES_MARKER + JSON.stringify(sources)));
+      controller.enqueue(encoder.encode(SOURCES_MARKER + JSON.stringify(toSources(results))));
       controller.close();
     },
   });
 
   return new Response(stream, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+}
+
+// Searches are built from the latest message, so a bare "how do I watch?" needs the town and story attached.
+function withLocalContext(messages: ChatMessage[], town: string, headline: string): ChatMessage[] {
+  const last = messages.at(-1);
+  if (!last) return messages;
+  return [...messages.slice(0, -1), { ...last, content: `${last.content}\n\n(About the ${town} story "${headline}")` }];
 }
 
 function streamSample() {
