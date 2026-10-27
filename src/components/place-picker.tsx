@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PLACES, type Place } from "@/lib/places";
+import { usePlaceSearch } from "@/lib/use-place-search";
 
 type Props = {
   selected: Place;
@@ -30,10 +31,12 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
   const [active, setActive] = useState(0);
 
   const q = (text ?? "").trim().toLowerCase();
-  // Prefix matches first, then anywhere-in-name matches.
-  const options = PLACES.filter((p) => p.name.toLowerCase().includes(q)).sort(
+  const search = usePlaceSearch(q);
+  // Detroit places first (prefix matches, then anywhere-in-name), then every other US town from the search.
+  const featured = PLACES.filter((p) => p.name.toLowerCase().includes(q)).sort(
     (a, b) => Number(b.name.toLowerCase().startsWith(q)) - Number(a.name.toLowerCase().startsWith(q)),
   );
+  const options = [...featured, ...search.places.filter((p) => !featured.some((f) => f.query === p.query))];
   const current = Math.min(active, Math.max(options.length - 1, 0));
 
   const close = () => {
@@ -125,12 +128,25 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
         </ul>
       )}
       {open && options.length === 0 && (
-        <div className="combo-list" id="place-list">
-          <p className="combo-note">No match for “{text}”. Check the spelling, or try a nearby neighborhood.</p>
+        <div className="combo-list" id="place-list" role={search.searching ? "status" : undefined}>
+          {search.searching ? (
+            <p className="combo-note" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span className="press" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              Looking for towns…
+            </p>
+          ) : search.failed ? (
+            <p className="combo-note">We couldn&apos;t search towns just now. Check your connection and try again.</p>
+          ) : (
+            <p className="combo-note">No match for “{text}”. Check the spelling, or try a nearby town.</p>
+          )}
         </div>
       )}
       <p className="sr" role="status">
-        {open ? (options.length ? `${options.length} places found` : "No places found") : ""}
+        {open && !search.searching ? (options.length ? `${options.length} places found` : "No places found") : ""}
       </p>
     </div>
   );
