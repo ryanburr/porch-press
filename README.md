@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The Porch Press
 
-## Getting Started
+Your town's daily paper, delivered to your porch. Pick your town and get a front page of today's local news, curated by Perplexity, with full articles and follow-up questions.
 
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # add your PERPLEXITY_API_KEY
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without a key, every route serves a sample edition, so the UI can be built offline.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Data layer
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Types live in `src/lib/types.ts`. `stories[0]` of an `Edition` is the lead story.
 
-## Learn More
+| Route | Call | Returns |
+| --- | --- | --- |
+| `GET /api/front-page?town=Asheville, NC&date=YYYY-MM-DD` | `sonar-pro`, JSON schema, last-week recency | `Edition`. Cached per town per day; add `&fresh=1` to reprint. |
+| `POST /api/article` `{ town, story }` | `sonar` | `Article`: plain-text `body` with `[n]` markers that index into `sources` |
+| `POST /api/ask` `{ town, story, article, messages }` | `sonar`, streamed | Answer text, then `\u001e` and a JSON array of sources |
 
-To learn more about Next.js, take a look at the following resources:
+Client hooks for components:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `useEdition(town)` → `{ edition, loading, error, reprint }` (cached in localStorage per day)
+- `useArticle(edition, story)` → `{ article, loading, error }`, plus `paragraphsOf(article)`
+- `useAsk(town, story, article)` → `{ turns, busy, ask(question) }`; each turn's `answer` streams in live
