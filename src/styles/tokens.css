@@ -1,0 +1,154 @@
+/* ==========================================================================
+   The Porch Press — design tokens v1.0
+   Day edition is the default. Night edition: data-theme="night".
+   Print (black and white): data-theme="print". Set the attribute on any
+   element (usually <html> or the page wrapper); everything below inherits.
+   Names follow the JSON file: color.ink  ->  --color-ink
+   ========================================================================== */
+
+:root,
+[data-theme="day"] {
+  color-scheme: light;
+
+  /* color: surfaces */
+  --color-paper: #f6f1e7;              /* page background, warm newsprint   */
+  --color-card: #fffaf0;               /* raised panels, inputs on paper    */
+  --color-wash: #ece4d3;               /* hover and pressed surface         */
+
+  /* color: text and ink */
+  --color-ink: #1c1a17;                /* text, rules, primary button       */
+  --color-ink-hover: #3a352e;          /* primary button hover              */
+  --color-on-ink: #f6f1e7;             /* text on an ink fill               */
+  --color-muted: #6b645a;              /* meta text, captions (5.2:1)       */
+
+  /* color: attention and signal */
+  --color-accent: #b3261e;             /* section labels, warnings          */
+  --color-signal-increase: #b3261e;    /* more of a problem than last week  */
+  --color-signal-decrease: #2e6b3a;    /* less of a problem, fact-check pass*/
+  --color-signal-neutral: #1c1a17;     /* change with no good or bad side   */
+
+  /* color: structure (decorative only, never the only cue) */
+  --color-rule-soft: #c9c0b0;          /* column rules, dotted separators   */
+  --color-focus: #1c1a17;              /* focus ring                        */
+
+  /* type: families (Google Fonts only) */
+  --font-display: "Playfair Display", "Times New Roman", serif;
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* type: styles, used as  font: var(--text-lead)  */
+  /* cqw = percent of the nearest container (.page or .pp-c); falls back to viewport width */
+  --text-masthead: 900 clamp(44px, 9cqw, 92px)/1 var(--font-display);
+  --text-lead: 900 clamp(30px, 5cqw, 52px)/1.08 var(--font-display);
+  --text-section-title: 900 clamp(40px, 7cqw, 72px)/1 var(--font-display);
+  --text-headline: 700 24px/1.2 var(--font-display);
+  --text-card-title: 700 22px/1.2 var(--font-display);
+  --text-stat: 900 40px/1 var(--font-display);
+  --text-score: 900 64px/1 var(--font-display);
+  --text-body: 400 17px/1.55 var(--font-body);
+  --text-body-strong: 600 17px/1.55 var(--font-body);
+  --text-body-lead: 400 20px/1.5 var(--font-body);
+  --text-body-card: 400 16px/1.45 var(--font-body);
+  --text-tagline: italic 400 19px/1.4 var(--font-body);
+  --text-caption: italic 400 14px/1.45 var(--font-body);
+  --text-label: 600 12px/1.2 var(--font-ui);
+  --text-ear: 600 12px/1.3 var(--font-ui);
+  --text-meta: 500 13px/1.4 var(--font-ui);
+  --text-button: 600 13px/1 var(--font-ui);
+  --text-chip: 600 13px/1 var(--font-ui);
+  --text-input: 500 15px/1.2 var(--font-ui);
+  --tracking-label: 0.12em;
+  --tracking-ear: 0.1em;
+  --tracking-button: 0.08em;
+
+  /* spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* borders and rules */
+  --radius-none: 0;
+  --border-ink: 1px solid var(--color-ink);
+  --rule-hairline: 1px solid var(--color-ink);       /* between bands, card and input borders */
+  --rule-soft: 1px solid var(--color-rule-soft);     /* column dividers */
+  --rule-dotted: 1px dotted var(--color-rule-soft);  /* row separators */
+  --rule-double: 4px double var(--color-ink);        /* under masthead, above footer */
+  --rule-accent: 1px solid var(--color-accent);      /* warning box */
+
+  /* elevation: print is flat; offset shadows only for floating menus */
+  --elevation-0: none;
+  --elevation-1: 2px 2px 0 var(--color-rule-soft);
+  --elevation-2: 4px 4px 0 var(--color-ink);
+
+  /* motion */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 400ms;
+  --motion-pulse: 1200ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* layout and targets */
+  --layout-max: 1200px;
+  --layout-sidebar: 300px;
+  --layout-gutter: 24px;
+  --layout-stack-below: 820px;       /* single column under this width */
+  --tap-min: 44px;
+}
+
+/* Night edition: warm charcoal paper, cream ink. Hue stays near 40 degrees
+   so it reads as newsprint under a lamp, not as neutral gray. */
+[data-theme="night"] {
+  color-scheme: dark;
+  --color-paper: #1d1a15;
+  --color-card: #272219;
+  --color-wash: #322c22;
+  --color-ink: #f3ebd9;
+  --color-ink-hover: #dcd2bb;
+  --color-on-ink: #1d1a15;
+  --color-muted: #b3a994;              /* 7.4:1 on night paper */
+  --color-accent: #ef6f61;
+  --color-signal-increase: #ef6f61;
+  --color-signal-decrease: #7fcf8f;
+  --color-signal-neutral: #f3ebd9;
+  --color-rule-soft: #4b4337;
+  --color-focus: #f3ebd9;
+  --elevation-1: 2px 2px 0 var(--color-rule-soft);
+  --elevation-2: 4px 4px 0 var(--color-rule-soft);
+}
+
+/* Print: pure black on white. Direction is carried by glyphs and words,
+   never by hue. Muted text stays at or above #767676. */
+[data-theme="print"] {
+  color-scheme: light;
+  --color-paper: #ffffff;
+  --color-card: #ffffff;
+  --color-wash: #eeeeee;
+  --color-ink: #000000;
+  --color-ink-hover: #222222;
+  --color-on-ink: #ffffff;
+  --color-muted: #4a4a4a;
+  --color-accent: #000000;
+  --color-signal-increase: #000000;
+  --color-signal-decrease: #000000;
+  --color-signal-neutral: #000000;
+  --color-rule-soft: #767676;
+  --color-focus: #000000;
+  --elevation-1: none;
+  --elevation-2: none;
+}
+
+/* Reduced motion: no animation, no transitions. State is still visible. */
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  [data-theme] {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+    --motion-pulse: 0ms;
+  }
+}

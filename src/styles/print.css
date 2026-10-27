@@ -1,0 +1,64 @@
+/* ==========================================================================
+   The Porch Press — print stylesheet v1.0
+   Letter paper, black ink on white, readable as a photocopy.
+   Link after components.css:  <link rel="stylesheet" href="print.css">
+   The same rules also apply on screen to any element with data-theme="print".
+   ========================================================================== */
+
+@page { size: letter; margin: 0.5in; }
+
+/* Direction without color: glyph plus word, filled vs outlined chip */
+[data-theme="print"] .chip-up { background: #000; color: #fff; border-color: #000; }
+[data-theme="print"] .chip-down { background: #fff; color: #000; border: 2px solid #000; }
+[data-theme="print"] .chip-flat { background: #fff; color: #000; border-style: dashed; }
+[data-theme="print"] .badge-good { border: 2px solid #000; color: #000; }
+[data-theme="print"] .warn { border: 2px solid #000; }
+[data-theme="print"] .label-section { color: #000; border-top: 2px solid #000; padding-top: 4px; }
+[data-theme="print"] .score { color: #000; }
+
+@media print {
+  html, body { background: #fff !important; }
+  .pp, .pp[data-theme] {
+    --color-paper: #ffffff; --color-card: #ffffff; --color-wash: #eeeeee;
+    --color-ink: #000000; --color-ink-hover: #222222; --color-on-ink: #ffffff;
+    --color-muted: #4a4a4a; --color-accent: #000000;
+    --color-signal-increase: #000000; --color-signal-decrease: #000000; --color-signal-neutral: #000000;
+    --color-rule-soft: #767676; --color-focus: #000000;
+    --elevation-1: none; --elevation-2: none;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* Remove everything that only works on a screen */
+  .skip, .secnav, .dl-controls, .share, .card.subscribe, .emblem, .footer-links { display: none !important; }
+
+  /* Frame */
+  .page { max-width: none; }
+  .masthead { padding: 0 0 8pt; }
+  .mast-title { font-size: 56pt; }
+  .lead { padding: 14pt 0; }
+  .lead-h { font-size: 30pt; }
+  .lead-sum { font-size: 12pt; }
+  .dateline { padding: 6pt 0; }
+
+  /* Two columns of stories plus a 2.1in sidebar, as on the screen layout */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 2.1in; gap: 0.25in; padding: 14pt 0 0; }
+  .sidebar { display: block; }
+  .stories { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .story, .card, .num-row, .warn, .notice, .trend { break-inside: avoid; }
+  .story p { font-size: 11.5pt; text-align: justify; hyphens: auto; }
+  .story-h { font-size: 17pt; }
+
+  /* Chips and badges carry meaning without color */
+  .chip-up { background: #000; color: #fff; border-color: #000; }
+  .chip-down { background: #fff; color: #000; border: 2px solid #000; }
+  .chip-flat { border-style: dashed; }
+  .badge-good { border: 2px solid #000; color: #000; }
+  .warn { border: 2px solid #000; }
+  .label-section { color: #000; }
+  .score { color: #000; }
+
+  /* Links print as plain text; the address is in the footer */
+  .pp a { text-decoration: none; color: #000; }
+  .footer { padding: 8pt 0 0; }
+  .footer p { font-size: 9pt; }
+}
