@@ -9,7 +9,7 @@
 Pick a neighborhood or town and get today's local news laid out as a newspaper front page.<br />
 Every story links to its sources, every article is one click away, and you can ask follow-up questions.
 
-[**Read today's edition →**](https://porch-press.vercel.app)
+[**Read today's edition at porchpress.app →**](https://porchpress.app)
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-1c1a17?logo=nextdotjs&logoColor=f6f1e7)](https://nextjs.org)
 [![React 19](https://img.shields.io/badge/React-19-1c1a17?logo=react&logoColor=f6f1e7)](https://react.dev)
@@ -20,7 +20,7 @@ Every story links to its sources, every article is one click away, and you can a
 
 <br />
 
-<a href="https://porch-press.vercel.app"><img src="docs/front-page.png" width="820" alt="The Porch Press front page for Detroit: a masthead, a lead story about downtown parking, two columns of local stories, and a sidebar with the weather and news briefs" /></a>
+<a href="https://porchpress.app"><img src="docs/front-page.png" width="820" alt="The Porch Press front page for Detroit: a masthead, a lead story about downtown parking, two columns of local stories, and a sidebar with the weather and news briefs" /></a>
 
 </div>
 
