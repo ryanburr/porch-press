@@ -1,9 +1,11 @@
+import { LANGUAGES, localeOr } from "@/lib/i18n";
 import { callAgent, hasPerplexityKey, toSources, type AgentEvent, type SearchResult } from "@/lib/perplexity";
-import { SAMPLE_ANSWER } from "@/lib/sample";
+import { sampleAnswer } from "@/lib/sample";
 import { SOURCES_MARKER, type ChatMessage, type Story } from "@/lib/types";
 
 type AskRequest = {
   town: string;
+  lang?: string;
   story: Pick<Story, "headline" | "summary">;
   article: string;
   messages: ChatMessage[];
@@ -12,15 +14,16 @@ type AskRequest = {
 const encoder = new TextEncoder();
 
 export async function POST(req: Request) {
-  const { town, story, article, messages } = (await req.json()) as AskRequest;
-  if (!hasPerplexityKey()) return streamSample();
+  const { town, story, article, messages, ...rest } = (await req.json()) as AskRequest;
+  const lang = localeOr(rest.lang);
+  if (!hasPerplexityKey()) return streamSample(sampleAnswer(lang));
 
   let upstream: Response;
   try {
     upstream = await callAgent({
       effort: "fast",
       stream: true,
-      instructions: `You are the Porch Press newsroom answering readers in ${town}. Answer follow-up questions about local news in 2 to 4 short paragraphs of plain text, no markdown. Be specific and practical: dates, places, and how residents can take part. Cite sources with bracketed numbers like [1] that refer to your search results, never markdown links. If you don't know, say so.
+      instructions: `You are the Porch Press newsroom answering readers in ${town}. Answer follow-up questions about local news in 2 to 4 short paragraphs of plain text, no markdown. Be specific and practical: dates, places, and how residents can take part. Cite sources with bracketed numbers like [1] that refer to your search results, never markdown links. If you don't know, say so. Always answer in ${LANGUAGES[lang].english}, whatever language the question is in.
 
 The reader is looking at this story:
 Headline: ${story.headline}
@@ -79,8 +82,8 @@ function withLocalContext(messages: ChatMessage[], town: string, headline: strin
   return [...messages.slice(0, -1), { ...last, content: `${last.content}\n\n(About the ${town} story "${headline}")` }];
 }
 
-function streamSample() {
-  const words = SAMPLE_ANSWER.split(" ");
+function streamSample(answer: string) {
+  const words = answer.split(" ");
   const stream = new ReadableStream({
     async start(controller) {
       for (const word of words) {

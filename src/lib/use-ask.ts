@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import type { Locale } from "./i18n";
 import { SOURCES_MARKER, type Article, type ChatMessage, type Source, type Story } from "./types";
 
-export type Turn = { question: string; answer: string; sources: Source[] };
+export type Turn = { question: string; answer: string; sources: Source[]; failed?: boolean };
 
-// Follow-up Q&A about one story. `answer` fills in live as the response streams.
-export function useAsk(town: string, story: Story | undefined, article: Article | null) {
+// Follow-up Q&A about one story, answered in `lang`. `answer` fills in live as the response streams.
+export function useAsk(town: string, story: Story | undefined, article: Article | null, lang: Locale) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -29,6 +30,7 @@ export function useAsk(town: string, story: Story | undefined, article: Article 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           town,
+          lang,
           story: { headline: story.headline, summary: story.summary },
           article: article.body,
           messages: [...history, { role: "user", content: q }],
@@ -48,7 +50,7 @@ export function useAsk(town: string, story: Story | undefined, article: Article 
       const [answer, sourcesJson] = text.split(SOURCES_MARKER);
       update({ answer, sources: sourcesJson ? (JSON.parse(sourcesJson) as Source[]) : [] });
     } catch {
-      update({ answer: "Sorry, the newsroom couldn't answer that one. Try again." });
+      update({ answer: "", failed: true });
     } finally {
       setBusy(false);
     }

@@ -1,3 +1,5 @@
+import type { Locale } from "./i18n";
+
 // `query` is the town string sent to useEdition; `name` is what readers see.
 export type Place = { name: string; query: string };
 
@@ -55,4 +57,5 @@ export const PLACES: Place[] = [
 
 export const placeFor = (query: string): Place => PLACES.find((p) => p.query === query) ?? { name: query, query };
 
-export const frontPageHref = (query: string) => (query === DETROIT.query ? "/" : `/?town=${encodeURIComponent(query)}`);
+export const frontPageHref = (lang: Locale, query: string) =>
+  query === DETROIT.query ? `/${lang}` : `/${lang}?town=${encodeURIComponent(query)}`;

@@ -4,40 +4,44 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AskFollowUp } from "@/components/ask";
 import { CitedText } from "@/components/cited-text";
+import { sectionName, useI18n } from "@/components/i18n";
 import { Masthead } from "@/components/masthead";
 import { Loading, PressJam } from "@/components/states";
 import { longDate, safeDecode } from "@/lib/dates";
+import { fill, plural } from "@/lib/i18n";
 import { frontPageHref, placeFor } from "@/lib/places";
 import { paragraphsOf, useArticle } from "@/lib/use-article";
 import { useEdition } from "@/lib/use-edition";
 
 export function StoryView() {
+  const { lang, t } = useI18n();
   const params = useParams<{ town: string; id: string }>();
   const town = safeDecode(params.town);
   const placeName = placeFor(town).name;
-  const backHref = frontPageHref(town);
-  const { edition, error: editionError, loading, reprint } = useEdition(town);
+  const backHref = frontPageHref(lang, town);
+  const { edition, error: editionError, loading, reprint } = useEdition(town, lang);
   const story = edition?.stories.find((s) => s.id === params.id);
-  const { article, error: articleError } = useArticle(edition, story);
+  const { article, error: articleError } = useArticle(edition, story, lang);
 
   return (
     <div className="pp">
       <a className="skip" href="#story">
-        Skip to the story
+        {t.article.skip}
       </a>
       <div className="page">
         <Masthead />
-        <nav className="crumbs" aria-label="Breadcrumb">
-          <Link href={backHref}>← Front page</Link>
+        <nav className="crumbs" aria-label={t.article.breadcrumb}>
+          <Link href={backHref}>{t.article.back}</Link>
           {story && (
             <>
               <span aria-hidden="true">/</span>
-              <span>{story.section}</span>
+              <span>{sectionName(t, story.section)}</span>
             </>
           )}
           <span aria-hidden="true">/</span>
           <span>
-            {placeName} Edition{edition && ` · ${longDate(edition.date)}`}
+            {fill(t.front.edition, { place: placeName })}
+            {edition && ` · ${longDate(edition.date, lang)}`}
           </span>
         </nav>
 
@@ -45,10 +49,10 @@ export function StoryView() {
         {!loading && editionError && <PressJam onRetry={reprint} />}
         {!loading && edition && !story && (
           <div className="state">
-            <p className="state-title">This story isn&apos;t in today&apos;s paper</p>
-            <p className="state-note">Editions change each day. Head back to the front page for today&apos;s news.</p>
+            <p className="state-title">{t.article.missing}</p>
+            <p className="state-note">{t.article.missingNote}</p>
             <Link className="btn" href={backHref}>
-              Back to the front page
+              {t.article.backToFront}
             </Link>
           </div>
         )}
@@ -58,15 +62,15 @@ export function StoryView() {
             <main>
               <article>
                 <header className="article-head">
-                  <p className="label label-section">{story.section}</p>
+                  <p className="label label-section">{sectionName(t, story.section)}</p>
                   <h1 className="article-h">{story.headline}</h1>
                   <p className="byline">
-                    Written by AI from local reporting
-                    {article && ` · ${article.sources.length} sources`}
+                    {t.article.byline}
+                    {article && ` · ${plural(lang, t.article.sourceCount, article.sources.length)}`}
                   </p>
                 </header>
 
-                {articleError && <p className="state-note is-error">Our reporter couldn&apos;t file this story. Try again.</p>}
+                {articleError && <p className="state-note is-error">{t.article.failed}</p>}
                 {!article && !articleError && (
                   <div className="state" role="status">
                     <span className="press" aria-hidden="true">
@@ -74,7 +78,7 @@ export function StoryView() {
                       <i />
                       <i />
                     </span>
-                    <p className="state-title">Filing the full story…</p>
+                    <p className="state-title">{t.article.filing}</p>
                     <p className="state-note">{story.summary}</p>
                   </div>
                 )}
@@ -93,11 +97,11 @@ export function StoryView() {
               </article>
             </main>
 
-            <aside className="sidebar" aria-label="About this story">
+            <aside className="sidebar" aria-label={t.article.about}>
               {article && article.sources.length > 0 && (
                 <section className="card todo" aria-labelledby="src-h">
                   <h2 className="card-label" id="src-h">
-                    <span>Sources</span>
+                    <span>{t.article.sources}</span>
                   </h2>
                   <ol className="actions" style={{ listStyle: "decimal" }}>
                     {article.sources.map((s, i) => (
@@ -113,26 +117,26 @@ export function StoryView() {
               )}
               <section className="card" aria-labelledby="share-h">
                 <h2 className="card-label" id="share-h">
-                  <span>Share or print</span>
+                  <span>{t.article.share}</span>
                 </h2>
                 <div style={{ display: "grid", gap: 8 }}>
                   <button className="btn btn-block" type="button" onClick={() => navigator.clipboard?.writeText(location.href)}>
-                    Copy link
+                    {t.article.copy}
                   </button>
                   <button className="btn btn-block" type="button" onClick={() => window.print()}>
-                    Print, Letter size
+                    {t.article.printLetter}
                   </button>
                 </div>
               </section>
               <Link className="btn btn-block" href={backHref}>
-                Back to the front page
+                {t.article.backToFront}
               </Link>
             </aside>
           </div>
         )}
 
         <footer className="footer">
-          <p>This paper is written by AI from local reporting. It can still make mistakes, so check the sources before you share.</p>
+          <p>{t.article.disclaimer}</p>
         </footer>
       </div>
     </div>

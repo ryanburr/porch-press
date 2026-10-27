@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { fill, plural } from "@/lib/i18n";
 import { PLACES, type Place } from "@/lib/places";
+import { useI18n } from "./i18n";
 
 type Props = {
   selected: Place;
@@ -25,6 +27,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
 const selectSoon = (input: HTMLInputElement) => requestAnimationFrame(() => input.select());
 
 export function PlacePicker({ selected, disabled, onChoose }: Props) {
+  const { lang, t } = useI18n();
   const [text, setText] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -65,7 +68,7 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
   return (
     <div className="combo">
       <label className="sr" htmlFor="place-in">
-        Find your neighborhood or town
+        {t.picker.label}
       </label>
       <svg className="combo-icon" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
         <circle cx="8.5" cy="8.5" r="5.5" />
@@ -81,7 +84,7 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
         aria-autocomplete="list"
         aria-activedescendant={open && options.length ? `place-opt-${current}` : undefined}
         autoComplete="off"
-        placeholder="Search neighborhoods or towns"
+        placeholder={t.picker.placeholder}
         disabled={disabled}
         value={text ?? selected.name}
         onFocus={(e) => {
@@ -102,7 +105,7 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
         onKeyDown={onKeyDown}
       />
       {open && options.length > 0 && (
-        <ul className="combo-list" id="place-list" role="listbox" aria-label="Neighborhoods and towns">
+        <ul className="combo-list" id="place-list" role="listbox" aria-label={t.picker.list}>
           {options.map((place, i) => (
             <li
               key={place.query}
@@ -126,11 +129,11 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
       )}
       {open && options.length === 0 && (
         <div className="combo-list" id="place-list">
-          <p className="combo-note">No match for “{text}”. Check the spelling, or try a nearby neighborhood.</p>
+          <p className="combo-note">{fill(t.picker.noMatch, { text: text ?? "" })}</p>
         </div>
       )}
       <p className="sr" role="status">
-        {open ? (options.length ? `${options.length} places found` : "No places found") : ""}
+        {open ? (options.length ? plural(lang, t.picker.found, options.length) : t.picker.none) : ""}
       </p>
     </div>
   );

@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { fill } from "@/lib/i18n";
 import { useAsk } from "@/lib/use-ask";
 import type { Article, Story } from "@/lib/types";
 import { CitedText } from "./cited-text";
-
-const SUGGESTED = ["When is the next meeting or vote?", "How can residents weigh in?", "What happens next?"];
+import { useI18n } from "./i18n";
 
 export function AskFollowUp({ town, story, article }: { town: string; story: Story; article: Article }) {
-  const { turns, busy, ask } = useAsk(town, story, article);
+  const { lang, t } = useI18n();
+  const { turns, busy, ask } = useAsk(town, story, article, lang);
   const [text, setText] = useState("");
   const lastAsked = turns.at(-1)?.question;
 
@@ -16,15 +17,15 @@ export function AskFollowUp({ town, story, article }: { town: string; story: Sto
     <section className="ask" aria-labelledby="ask-h">
       <div className="ask-head">
         <h2 className="card-title" id="ask-h" style={{ margin: 0 }}>
-          Ask a follow-up
+          {t.ask.title}
         </h2>
-        <span className="ask-tag">AI</span>
+        <span className="ask-tag">{t.ask.tag}</span>
       </div>
       <p className="fine" style={{ color: "var(--color-ink)" }}>
-        Questions about this story, answered from the latest local reporting. Pick one or type your own.
+        {t.ask.intro}
       </p>
-      <div className="q-list" role="group" aria-label="Suggested questions">
-        {SUGGESTED.map((q) => (
+      <div className="q-list" role="group" aria-label={t.ask.suggestedLabel}>
+        {t.ask.suggested.map((q) => (
           <button key={q} className="q-chip" type="button" aria-pressed={lastAsked === q} disabled={busy} onClick={() => ask(q)}>
             {q}
           </button>
@@ -39,26 +40,28 @@ export function AskFollowUp({ town, story, article }: { town: string; story: Sto
         }}
       >
         <label className="sr" htmlFor="ask-in">
-          Your question about this story
+          {t.ask.inputLabel}
         </label>
         <input
           className="input"
           id="ask-in"
           type="text"
-          placeholder="Ask about this story"
+          placeholder={t.ask.placeholder}
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
         <button className="btn btn-primary" type="submit" disabled={busy || !text.trim()}>
-          Ask
+          {t.ask.submit}
         </button>
       </form>
 
       {turns.map((turn, i) => (
-        <div className="answer" role="status" aria-busy={!turn.answer} key={i}>
+        <div className="answer" role="status" aria-busy={!turn.answer && !turn.failed} key={i}>
           {/* div, not p: the design's `.answer p` rule would override .answer-q */}
-          <div className="answer-q">You asked: {turn.question}</div>
-          {turn.answer ? (
+          <div className="answer-q">{fill(t.ask.youAsked, { question: turn.question })}</div>
+          {turn.failed ? (
+            <p>{t.ask.failed}</p>
+          ) : turn.answer ? (
             turn.answer
               .split(/\n+/)
               .filter((p) => p.trim())
@@ -74,14 +77,14 @@ export function AskFollowUp({ town, story, article }: { town: string; story: Sto
                 <i />
                 <i />
               </span>
-              <p className="fact-line">Checking the latest reporting…</p>
+              <p className="fact-line">{t.ask.checking}</p>
             </div>
           )}
         </div>
       ))}
 
       <p className="fine" style={{ marginTop: 12 }}>
-        Answers are written by AI and can be wrong. Check the linked sources.
+        {t.ask.disclaimer}
       </p>
     </section>
   );
