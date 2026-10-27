@@ -7,14 +7,15 @@ import { CitedText } from "@/components/cited-text";
 import { Masthead } from "@/components/masthead";
 import { Loading, PressJam } from "@/components/states";
 import { longDate, safeDecode } from "@/lib/dates";
-import { PLACES } from "@/lib/places";
+import { frontPageHref, placeFor } from "@/lib/places";
 import { paragraphsOf, useArticle } from "@/lib/use-article";
 import { useEdition } from "@/lib/use-edition";
 
 export function StoryView() {
   const params = useParams<{ town: string; id: string }>();
   const town = safeDecode(params.town);
-  const placeName = PLACES.find((p) => p.query === town)?.name ?? town;
+  const placeName = placeFor(town).name;
+  const backHref = frontPageHref(town);
   const { edition, error: editionError, loading, reprint } = useEdition(town);
   const story = edition?.stories.find((s) => s.id === params.id);
   const { article, error: articleError } = useArticle(edition, story);
@@ -27,7 +28,7 @@ export function StoryView() {
       <div className="page">
         <Masthead />
         <nav className="crumbs" aria-label="Breadcrumb">
-          <Link href="/">← Front page</Link>
+          <Link href={backHref}>← Front page</Link>
           {story && (
             <>
               <span aria-hidden="true">/</span>
@@ -46,7 +47,7 @@ export function StoryView() {
           <div className="state">
             <p className="state-title">This story isn&apos;t in today&apos;s paper</p>
             <p className="state-note">Editions change each day. Head back to the front page for today&apos;s news.</p>
-            <Link className="btn" href="/">
+            <Link className="btn" href={backHref}>
               Back to the front page
             </Link>
           </div>
@@ -123,7 +124,7 @@ export function StoryView() {
                   </button>
                 </div>
               </section>
-              <Link className="btn btn-block" href="/">
+              <Link className="btn btn-block" href={backHref}>
                 Back to the front page
               </Link>
             </aside>

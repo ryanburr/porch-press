@@ -52,3 +52,7 @@ export const PLACES: Place[] = [
   ...NEIGHBORHOODS.map((n) => ({ name: n, query: `${n}, Detroit, MI` })),
   ...NEARBY_TOWNS.map((t) => ({ name: t, query: `${t}, MI` })),
 ];
+
+export const placeFor = (query: string): Place => PLACES.find((p) => p.query === query) ?? { name: query, query };
+
+export const frontPageHref = (query: string) => (query === DETROIT.query ? "/" : `/?town=${encodeURIComponent(query)}`);
