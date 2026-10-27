@@ -79,12 +79,15 @@ src/
 │   └── api/
 │       ├── front-page/        today's edition for a town
 │       ├── article/           full article for one story
-│       └── ask/               streamed answers to follow-up questions
+│       ├── ask/               streamed answers to follow-up questions
+│       └── places/            US city and town search for the picker
 ├── components/                masthead, dateline, place picker, stories, sidebar, ask
+├── data/
+│   └── places.json            every US city and town, built by `pnpm places`
 ├── lib/
 │   ├── perplexity.ts          Agent API client
 │   ├── types.ts               Edition, Story, Article, Source
-│   ├── places.ts              the towns and neighborhoods in the picker
+│   ├── places.ts              Detroit and its neighborhoods, featured in the picker
 │   ├── sample.ts              the offline sample edition
 │   └── use-*.ts               client hooks for the API routes
 └── styles/
@@ -105,6 +108,9 @@ Types live in `src/lib/types.ts`. `stories[0]` of an `Edition` is the lead story
 | `GET /api/front-page?town=Asheville, NC&date=YYYY-MM-DD` | effort `low`, JSON schema, last-week recency (~20s) | `Edition`. Cached per town per day; add `&fresh=1` to reprint. |
 | `POST /api/article` `{ town, story }` | effort `fast` (~6s) | `Article`: plain-text `body` with `[n]` markers matching `source.id` |
 | `POST /api/ask` `{ town, story, article, messages }` | effort `fast`, streamed (~4s) | Answer text with `[n]` markers, then `\u001e` and a JSON array of sources |
+| `GET /api/places?q=ashe` | local search, no API key | `{ places: Place[] }`: up to 8 US cities and towns, prefix matches first, biggest first. Understands `Austin TX`, `St Louis`, and accents. |
+
+The places list comes from the Census Bureau's city and town population estimates. Run `pnpm places` once a year (or `pnpm places path/to/sub-estYYYY.csv`) to rebuild `src/data/places.json`; update the default URL in `scripts/build-places.mjs` when a new year is published.
 
 Client hooks for components:
 
