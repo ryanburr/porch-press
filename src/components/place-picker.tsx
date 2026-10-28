@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { fill, plural } from "@/lib/i18n";
 import { PLACES, type Place } from "@/lib/places";
+import { usePlaceSearch } from "@/lib/use-place-search";
 import { useI18n } from "./i18n";
 
 type Props = {
@@ -33,10 +34,12 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
   const [active, setActive] = useState(0);
 
   const q = (text ?? "").trim().toLowerCase();
-  // Prefix matches first, then anywhere-in-name matches.
-  const options = PLACES.filter((p) => p.name.toLowerCase().includes(q)).sort(
+  const search = usePlaceSearch(q);
+  // Detroit places first (prefix matches, then anywhere-in-name), then every other US town from the search.
+  const featured = PLACES.filter((p) => p.name.toLowerCase().includes(q)).sort(
     (a, b) => Number(b.name.toLowerCase().startsWith(q)) - Number(a.name.toLowerCase().startsWith(q)),
   );
+  const options = [...featured, ...search.places.filter((p) => !featured.some((f) => f.query === p.query))];
   const current = Math.min(active, Math.max(options.length - 1, 0));
 
   const close = () => {
@@ -128,12 +131,25 @@ export function PlacePicker({ selected, disabled, onChoose }: Props) {
         </ul>
       )}
       {open && options.length === 0 && (
-        <div className="combo-list" id="place-list">
-          <p className="combo-note">{fill(t.picker.noMatch, { text: text ?? "" })}</p>
+        <div className="combo-list" id="place-list" role={search.searching ? "status" : undefined}>
+          {search.searching ? (
+            <p className="combo-note" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span className="press" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              {t.picker.searching}
+            </p>
+          ) : search.failed ? (
+            <p className="combo-note">{t.picker.searchFailed}</p>
+          ) : (
+            <p className="combo-note">{fill(t.picker.noMatch, { text: text ?? "" })}</p>
+          )}
         </div>
       )}
       <p className="sr" role="status">
-        {open ? (options.length ? plural(lang, t.picker.found, options.length) : t.picker.none) : ""}
+        {open && !search.searching ? (options.length ? plural(lang, t.picker.found, options.length) : t.picker.none) : ""}
       </p>
     </div>
   );
