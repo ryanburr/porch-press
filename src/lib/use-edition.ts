@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { todayKey } from "./dates";
+import type { Locale } from "./i18n";
 import type { Edition } from "./types";
 
 export function readStored<T>(key: string): T | null {
@@ -21,9 +22,10 @@ export function writeStored(key: string, value: unknown) {
   }
 }
 
-export const editionKey = (town: string, date: string) => `porch-press:edition:${town.toLowerCase()}:${date}`;
+export const editionKey = (town: string, date: string, lang: Locale) =>
+  `porch-press:edition:${lang}:${town.toLowerCase()}:${date}`;
 
-export function useEdition(town: string) {
+export function useEdition(town: string, lang: Locale) {
   const [edition, setEdition] = useState<Edition | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export function useEdition(town: string) {
   const load = useCallback(
     async (fresh = false) => {
       const date = todayKey();
-      const key = editionKey(town, date);
+      const key = editionKey(town, date, lang);
       const stored = fresh ? null : readStored<Edition>(key);
       if (stored) {
         setEdition(stored);
@@ -42,7 +44,7 @@ export function useEdition(town: string) {
       setLoading(true);
       setError(null);
       try {
-        const params = new URLSearchParams({ town, date });
+        const params = new URLSearchParams({ town, date, lang });
         if (fresh) params.set("fresh", "1");
         const res = await fetch(`/api/front-page?${params}`);
         const data = await res.json();
@@ -55,7 +57,7 @@ export function useEdition(town: string) {
         setLoading(false);
       }
     },
-    [town],
+    [town, lang],
   );
 
   useEffect(() => {

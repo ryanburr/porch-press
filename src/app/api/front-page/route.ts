@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { longDate } from "@/lib/dates";
+import { LANGUAGES, localeOr, type Locale } from "@/lib/i18n";
 import {
   callAgent,
   hasPerplexityKey,
@@ -47,22 +48,23 @@ Every story must cover a different news event; never repeat the lead or cover on
 Exclude national and international news unless it has a specific, concrete local angle. Prefer stories from the last 48 hours and never include anything older than 7 days. If the town is small, widen to its county or immediate region.
 Write in a warm, plain, neutral newspaper voice. Never invent facts: every story must come from your search results.`;
 
-// One edition per town per day keeps the demo fast and the API bill small.
+// One edition per town, day, and language keeps the demo fast and the API bill small.
 const editions = new Map<string, Edition>();
 
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
   const town = params.get("town")?.trim();
   const date = params.get("date") ?? new Date().toISOString().slice(0, 10);
+  const lang = localeOr(params.get("lang"));
   if (!town) return Response.json({ error: "Tell us your town." }, { status: 400 });
-  if (!hasPerplexityKey()) return Response.json(sampleEdition(town, date));
+  if (!hasPerplexityKey()) return Response.json(sampleEdition(town, date, lang));
 
-  const key = `${town.toLowerCase()}|${date}`;
+  const key = `${lang}|${town.toLowerCase()}|${date}`;
   const cached = editions.get(key);
   if (cached && !params.has("fresh")) return Response.json(cached);
 
   try {
-    const edition = await printEdition(town, date);
+    const edition = await printEdition(town, date, lang);
     editions.set(key, edition);
     return Response.json(edition);
   } catch (err) {
@@ -71,13 +73,14 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function printEdition(town: string, date: string): Promise<Edition> {
+async function printEdition(town: string, date: string, lang: Locale): Promise<Edition> {
   const res = await callAgent({
     effort: "low",
-    instructions: EDITOR_PROMPT,
+    instructions: `${EDITOR_PROMPT}\nWrite in ${LANGUAGES[lang].english}, even when your sources are in another language.`,
     input: `Today is ${longDate(date)}. Put together today's front page for ${town}.
-Return the town's proper name as "City, State"; a one-sentence weather outlook for today; the single most important local story as the lead; 6 more stories spread across different sections; and 4 one-line briefs about smaller local happenings.
-For each story write a punchy headline, a one-line dek, a 2-3 sentence summary, its section, and the ids of the search results you used.`,
+Return the town's proper name in English as "City, State"; a one-sentence weather outlook for today; the single most important local story as the lead; 6 more stories spread across different sections; and 4 one-line briefs about smaller local happenings.
+For each story write a punchy headline, a one-line dek, a 2-3 sentence summary, its section, and the ids of the search results you used.
+Write the weather, headlines, deks, summaries, and briefs in ${LANGUAGES[lang].english}; keep each section as one of its English names.`,
     recency: "week",
     schema: { name: "edition", schema: editionSchema },
   });

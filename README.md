@@ -31,6 +31,7 @@ Every story links to its sources, every article is one click away, and you can a
 - **A front page for your place.** Choose Detroit, one of its neighborhoods, or a nearby town. Perplexity searches the past week of local reporting and an AI editor picks a lead story, the stories below it, the weather, and a column of briefs.
 - **Full articles.** Open any story for a longer write-up with numbered citations that link back to the original reporting.
 - **Ask a follow-up.** "When is the next vote?" "How can residents weigh in?" Answers stream in live and cite their sources too.
+- **In your language.** Read the paper in English, Spanish, Arabic, French, or Hindi. It opens in your browser's language, and the masthead lets you switch.
 - **Print my paper.** A print stylesheet turns any page into black-and-white letter paper you could leave on the porch.
 - **Works without a key.** With no API key set, every route serves a sample edition, so you can build the UI offline.
 
@@ -46,7 +47,7 @@ flowchart LR
     agent --> news[(Local news<br/>sites)]
 ```
 
-The app is a single Next.js project. Three API routes call Perplexity's Agent API with its `web_search` tool, ask for structured JSON or streamed text, and hand the results to client hooks. Front pages are cached per town per day on the server and in the reader's `localStorage`, which keeps it fast and the API bill small.
+The app is a single Next.js project. Three API routes call Perplexity's Agent API with its `web_search` tool, ask for structured JSON or streamed text, and hand the results to client hooks. Front pages are cached per town, day, and language on the server and in the reader's `localStorage`, which keeps it fast and the API bill small.
 
 ## Run it locally
 
@@ -73,9 +74,11 @@ Open [localhost:3000](http://localhost:3000). Without a key you'll see the sampl
 
 ```text
 src/
+├── proxy.ts                   sends / to the reader's language
 ├── app/
-│   ├── page.tsx               front page
-│   ├── story/[town]/[id]/     article page with the follow-up chat
+│   ├── [lang]/
+│   │   ├── page.tsx           front page
+│   │   └── story/[town]/[id]/ article page with the follow-up chat
 │   └── api/
 │       ├── front-page/        today's edition for a town
 │       ├── article/           full article for one story
@@ -88,7 +91,9 @@ src/
 │   ├── perplexity.ts          Agent API client
 │   ├── types.ts               Edition, Story, Article, Source
 │   ├── places.ts              Detroit and its neighborhoods, featured in the picker
-│   ├── sample.ts              the offline sample edition
+│   ├── i18n.ts                the languages and their text direction
+│   ├── dictionaries/          page text per language
+│   ├── sample.ts, samples/    the offline sample edition per language
 │   └── use-*.ts               client hooks for the API routes
 └── styles/
     ├── tokens.css             colors, type, spacing
@@ -105,20 +110,32 @@ Types live in `src/lib/types.ts`. `stories[0]` of an `Edition` is the lead story
 
 | Route | Call | Returns |
 | --- | --- | --- |
-| `GET /api/front-page?town=Asheville, NC&date=YYYY-MM-DD` | effort `low`, JSON schema, last-week recency (~20s) | `Edition`. Cached per town per day; add `&fresh=1` to reprint. |
-| `POST /api/article` `{ town, story }` | effort `fast` (~6s) | `Article`: plain-text `body` with `[n]` markers matching `source.id` |
-| `POST /api/ask` `{ town, story, article, messages }` | effort `fast`, streamed (~4s) | Answer text with `[n]` markers, then `\u001e` and a JSON array of sources |
+| `GET /api/front-page?town=Asheville, NC&date=YYYY-MM-DD&lang=es` | effort `low`, JSON schema, last-week recency (~20s) | `Edition`. Cached per town, day, and language; add `&fresh=1` to reprint. |
+| `POST /api/article` `{ town, story, lang }` | effort `fast` (~6s) | `Article`: plain-text `body` with `[n]` markers matching `source.id` |
+| `POST /api/ask` `{ town, lang, story, article, messages }` | effort `fast`, streamed (~4s) | Answer text with `[n]` markers, then `\u001e` and a JSON array of sources |
 | `GET /api/places?q=ashe` | local search, no API key | `{ places: Place[] }`: up to 8 US cities and towns, prefix matches first, biggest first. Understands `Austin TX`, `St Louis`, and accents. |
 
 The places list comes from the Census Bureau's city and town population estimates. Run `pnpm places` once a year (or `pnpm places path/to/sub-estYYYY.csv`) to rebuild `src/data/places.json`; update the default URL in `scripts/build-places.mjs` when a new year is published.
 
 Client hooks for components:
 
-- `useEdition(town)` → `{ edition, loading, error, reprint }` (cached in localStorage per day)
-- `useArticle(edition, story)` → `{ article, loading, error }`, plus `paragraphsOf(article)`
-- `useAsk(town, story, article)` → `{ turns, busy, ask(question) }`; each turn's `answer` streams in live
+- `useEdition(town, lang)` → `{ edition, loading, error, reprint }` (cached in localStorage per day and language)
+- `useArticle(edition, story, lang)` → `{ article, loading, error }`, plus `paragraphsOf(article)`
+- `useAsk(town, story, article, lang)` → `{ turns, busy, ask(question) }`; each turn's `answer` streams in live
 
 </details>
+
+## Languages
+
+Every page lives under its language: `/en`, `/es`, `/ar`, `/fr`, `/hi`. `src/proxy.ts` sends a path without one (`/`, `/story/...`) to the reader's saved choice from the masthead switcher, else their browser's `Accept-Language`, else English.
+
+- `src/lib/i18n.ts`: the language list, text direction, and the `fill` and `plural` helpers.
+- `src/lib/dictionaries/`: page text per language. `en.ts` sets the shape, so TypeScript flags any missing string.
+- `src/lib/samples/`: the offline sample edition per language.
+- Perplexity writes stories, articles, and answers in the page's language. Section names stay English in the data and are translated on the page.
+- Arabic pages are right to left, so layout CSS uses logical properties (`padding-inline-start`, not `padding-left`). Arabic and Hindi load their own fonts; the masthead keeps Playfair.
+
+To add a language, add it to `LOCALES` and `LANGUAGES`, then add a dictionary and a sample edition.
 
 ## Contributing
 

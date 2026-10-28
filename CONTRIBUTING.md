@@ -24,11 +24,11 @@ Then open [localhost:3000](http://localhost:3000).
 
 ### Working without an API key
 
-You don't need a Perplexity key to contribute. With `PERPLEXITY_API_KEY` unset, every API route returns a sample edition from `src/lib/sample.ts`, and the front page shows a "Sample edition" banner. Most UI work can happen entirely offline.
+You don't need a Perplexity key to contribute. With `PERPLEXITY_API_KEY` unset, every API route returns a sample edition in the page's language from `src/lib/samples/`, and the front page shows a "Sample edition" banner. Most UI work can happen entirely offline.
 
 ### Working with real news
 
-To see live editions, copy `.env.example` to `.env.local` and add a key from the [Perplexity API settings](https://www.perplexity.ai/settings/api). Each new front page takes about 20 seconds and costs a little, so the server caches one edition per town per day. Add `&fresh=1` to `/api/front-page` only when you need a reprint.
+To see live editions, copy `.env.example` to `.env.local` and add a key from the [Perplexity API settings](https://www.perplexity.ai/settings/api). Each new front page takes about 20 seconds and costs a little, so the server caches one edition per town, day, and language. Add `&fresh=1` to `/api/front-page` only when you need a reprint.
 
 ## Finding your way around
 
@@ -37,6 +37,8 @@ To see live editions, copy `.env.example` to `.env.local` and add a key from the
 | The front page layout | `src/components/front-page.tsx`, `story.tsx`, `sidebar.tsx` |
 | The article page and follow-up chat | `src/components/story-view.tsx`, `ask.tsx`, `cited-text.tsx` |
 | Which towns appear in the picker | `src/lib/places.ts` |
+| Page text in each language | `src/lib/dictionaries/` |
+| Which languages we offer | `src/lib/i18n.ts`, `src/proxy.ts` |
 | What the AI editor writes | The prompts and JSON schemas in `src/app/api/*/route.ts` |
 | How we call Perplexity | `src/lib/perplexity.ts` |
 | Colors, type, and spacing | `src/styles/tokens.css` |
@@ -49,6 +51,7 @@ The [README](README.md#project-layout) has the full project tree and an API refe
 
 - **This is Next.js 16.** Its APIs differ from older versions you may know. Before writing framework code, check the bundled guides in `node_modules/next/dist/docs/` and heed any deprecation notices. `AGENTS.md` says the same for AI coding assistants.
 - **Style with the design system.** Components use the semantic classes in `components.css` and the tokens in `tokens.css` (`var(--color-ink)`, `var(--font-display)`, and so on). Add or reuse a token rather than hard-coding a color or font.
+- **Write for every language.** Put page text in the dictionaries, not in components; `en.ts` sets the shape, so TypeScript flags a string missing from the others. Use logical CSS properties (`padding-inline-start`, not `padding-left`) so Arabic's right-to-left layout keeps working.
 - **Keep the print edition working.** If you add a component, check how it looks in print preview. `print.css` should keep everything readable in black and white.
 - **Cite everything.** Generated text must come from search results, and the `[n]` markers in article and answer text must match a `source.id`. Never let the editor invent facts.
 - **Match the code around you.** Small focused components, short comments that explain why rather than what, and TypeScript types in `src/lib/types.ts` for anything shared.
@@ -64,7 +67,7 @@ The [README](README.md#project-layout) has the full project tree and an API refe
    pnpm build
    ```
 
-3. Try it in the browser: the sample edition, a real edition if you have a key, a story page, a follow-up question, and print preview.
+3. Try it in the browser: the sample edition, a real edition if you have a key, a story page, a follow-up question, print preview, and a right-to-left page under `/ar`.
 4. For visual changes, add before and after screenshots to the PR, including a narrow phone-width view.
 5. Write the PR description in plain language: what changed, why, and anything a reviewer should look at closely.
 

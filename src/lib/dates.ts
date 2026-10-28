@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, LANGUAGES, type Locale } from "./i18n";
+
 // Dates travel as local YYYY-MM-DD strings so an edition is keyed to the reader's day, not the server's.
 export function todayKey() {
   const d = new Date();
@@ -6,8 +8,8 @@ export function todayKey() {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
-export function longDate(date: string) {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+export function longDate(date: string, lang: Locale = DEFAULT_LOCALE) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString(LANGUAGES[lang].intl, {
     weekday: "long",
     month: "long",
     day: "numeric",

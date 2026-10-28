@@ -10,6 +10,46 @@
   --font-ui: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
+/* Arabic and Hindi get faces drawn for their script. Their joined letters break apart with letter-spacing,
+   and their taller glyphs need roomier lines. */
+:root:lang(ar), :root:lang(hi) {
+  --tracking-label: 0;
+  --tracking-ear: 0;
+  --tracking-button: 0;
+  /* Neither script has italics; skip the browser's fake slant. */
+  font-synthesis: weight;
+}
+:root:lang(ar) {
+  --font-display: var(--font-amiri), "Times New Roman", serif;
+  --font-body: var(--font-naskh), Georgia, serif;
+  --font-ui: var(--font-plex-arabic), system-ui, sans-serif;
+}
+:root:lang(hi) {
+  --font-display: var(--font-martel), "Times New Roman", serif;
+  --font-body: var(--font-martel), Georgia, serif;
+  --font-ui: var(--font-hind), system-ui, sans-serif;
+}
+/* tokens.css styles with taller lines, upright where English uses italics, and small UI text a size up. */
+:root:lang(ar), :root:lang(hi) {
+  /* The paper's name stays in English, so it keeps the English masthead face. */
+  --text-masthead: 900 clamp(44px, 9cqw, 92px)/1 var(--font-playfair), "Times New Roman", serif;
+  --text-lead: 700 clamp(30px, 5cqw, 52px)/1.35 var(--font-display);
+  --text-headline: 700 24px/1.45 var(--font-display);
+  --text-card-title: 700 22px/1.4 var(--font-display);
+  --text-body: 400 17px/1.8 var(--font-body);
+  --text-body-strong: 600 17px/1.8 var(--font-body);
+  --text-body-lead: 400 20px/1.75 var(--font-body);
+  --text-body-card: 400 16px/1.7 var(--font-body);
+  --text-tagline: 400 19px/1.6 var(--font-body);
+  --text-caption: 400 14px/1.6 var(--font-body);
+  --text-label: 600 13px/1.5 var(--font-ui);
+  --text-ear: 600 12px/1.5 var(--font-ui);
+  --text-meta: 500 13px/1.6 var(--font-ui);
+  --text-button: 600 14px/1.3 var(--font-ui);
+  --text-input: 500 15px/1.5 var(--font-ui);
+}
+:root:lang(ar) .ear, :root:lang(hi) .ear { letter-spacing: 0; }
+
 body {
   background: var(--color-paper);
 }
